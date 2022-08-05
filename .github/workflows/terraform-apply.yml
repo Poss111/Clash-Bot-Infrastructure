@@ -1,0 +1,86 @@
+name: Clash Bot Infrastructure Terraform Apply
+
+on:
+  push:
+    tags:
+      - 'v*'
+    paths-ignore:
+      - '**/README.md'
+      - '**/.gitignore'
+
+jobs:
+  terraform-apply:
+    name: 'Terraform Apply'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - uses: FranzDiebold/github-env-vars-action@v2.1.0
+
+      - name: Starting Terraform Apply
+        uses: Poss111/discord-hook-action@v1.6.8
+        with:
+          discord-hook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: 'Clash Bot Infrastructure Terraform Apply Notification'
+          message: 'Apply starting...'
+          message-color: '15258703'
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Apply
+        id: apply
+        env:
+          TF_VAR_access_key: ${{ secrets.AWS_SECRET_ID }}
+          TF_VAR_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          TF_VAR_region: "us-east-1"
+          TF_VAR_domain: ${{ secrets.DOMAIN }}
+        run: terraform apply -auto-approve -input=false
+
+      - name: Build Failed Discord Webhook
+        uses: Poss111/discord-hook-action@v1.6.8
+        if: ${{ failure() }}
+        with:
+          discord-hook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: 'Clash Bot Infrastructure Terraform Apply Notification'
+          message: |
+            Github Terraform build failed!
+            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.apply.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+          message-color: '16711680'
+
+      - name: Build Success Discord Webhook
+        uses: Poss111/discord-hook-action@v1.6.8
+        if: ${{ success() }}
+        with:
+          discord-hook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: 'Clash Bot Infrastructure Terraform Apply Notification'
+          message: |
+            Github Terraform build succeeded!
+            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.apply.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+          message-color: '65345'
+
