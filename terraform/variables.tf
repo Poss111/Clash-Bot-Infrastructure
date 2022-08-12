@@ -22,3 +22,14 @@ variable "domain" {
   type        = string
   sensitive   = true
 }
+
+variable "custom_header" {
+  type      = string
+  sensitive = true
+}
+
+variable "custom_header_value" {
+  type      = string
+  sensitive = true
+}
+

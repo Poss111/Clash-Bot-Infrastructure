@@ -14,6 +14,11 @@ terraform {
   }
 }
 
+data "tfe_outputs" "clash-bot-webapp" {
+  organization = "ClashBot"
+  workspace    = "ClashBot-Webapp"
+}
+
 provider "aws" {
   access_key = var.access_key
   secret_key = var.secret_key
@@ -110,6 +115,23 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
     }
   }
 
+  origin {
+    domain_name = tfe_outputs.clash-bot-webapp.values.webapp_lb_url
+    origin_id   = "clash-bot-webapp-lb"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1"]
+    }
+
+    custom_header {
+      name: var.custom_header
+      value: var.custom_header_value
+    }
+  }
+
   enabled         = true
   is_ipv6_enabled = true
   comment         = "Cloudfront distribution to handle the Clash Bot Webapp"
@@ -118,6 +140,35 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
     include_cookies = false
     bucket          = aws_s3_bucket.clash-bot-cf-logs-bucket.bucket_domain_name
     prefix          = "cf-clash-bot"
+  }
+
+  ordered_cache_behavior {
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods         = []
+    path_pattern           = "/api*"
+    target_origin_id       = "clash-bot-webapp-lb"
+    viewer_protocol_policy = "redirect-to-https"
+    origin_request_policy_id = "UserInformation"
+    forwarded_values {
+      query_string = true
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  ordered_cache_behavior {
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = []
+    path_pattern           = "/ws*"
+    target_origin_id       = "clash-bot-webapp-lb"
+    viewer_protocol_policy = "redirect-to-https"
+    forwarded_values {
+      query_string = true
+      cookies {
+        forward = "none"
+      }
+    }
   }
 
   default_cache_behavior {
