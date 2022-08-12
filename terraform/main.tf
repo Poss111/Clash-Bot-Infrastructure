@@ -120,7 +120,7 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
     origin_id   = "clash-bot-webapp-lb"
 
     custom_origin_config {
-      http_port              = 80
+      http_port              = 8080
       https_port             = 443
       origin_protocol_policy = "http-only"
       origin_ssl_protocols   = ["TLSv1"]
