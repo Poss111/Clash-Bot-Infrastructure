@@ -127,8 +127,8 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
     }
 
     custom_header {
-      name: var.custom_header
-      value: var.custom_header_value
+      name  = var.custom_header
+      value = var.custom_header_value
     }
   }
 
@@ -143,11 +143,11 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
   }
 
   ordered_cache_behavior {
-    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods         = []
-    path_pattern           = "/api*"
-    target_origin_id       = "clash-bot-webapp-lb"
-    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = []
+    path_pattern             = "/api*"
+    target_origin_id         = "clash-bot-webapp-lb"
+    viewer_protocol_policy   = "redirect-to-https"
     origin_request_policy_id = "UserInformation"
     forwarded_values {
       query_string = true
