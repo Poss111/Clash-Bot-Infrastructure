@@ -23,6 +23,11 @@ variable "domain" {
   sensitive   = true
 }
 
+variable "lb_port" {
+  description = "Load Balancer Port"
+  type        = number
+}
+
 variable "custom_header" {
   type      = string
   sensitive = true

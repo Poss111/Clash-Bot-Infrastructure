@@ -85,7 +85,8 @@ resource "aws_s3_bucket_website_configuration" "clash_bot_webapp_s3_website_conf
 }
 
 resource "aws_s3_bucket" "clash-bot-cf-logs-bucket" {
-  bucket = "clash-bot-cf-logs-bucket"
+  bucket        = "clash-bot-cf-logs-bucket"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_acl" "clash-bot-webapp-bucket_acl" {
@@ -102,9 +103,45 @@ data "aws_acm_certificate" "clash-bot-cer" {
   statuses = ["ISSUED"]
 }
 
+resource "aws_cloudfront_cache_policy" "clash-bot-service-cf-cp" {
+  name        = "clash-bot-service-cp"
+  comment     = "This is to query for the user information from the service."
+  default_ttl = 1
+  max_ttl     = 1
+  min_ttl     = 1
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = "none"
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+  }
+}
+
+resource "aws_cloudfront_origin_request_policy" "clash-bot-service-rp" {
+  name    = "clash-bot-service-request-policy"
+  comment = "This is to query for the user information from the service."
+  cookies_config {
+    cookie_behavior = "none"
+  }
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = ["Sec-WebSocket-Key", "Sec-WebSocket-Version", "Host", "Sec-WebSocket-Protocol", "Sec-WebSocket-Accept"]
+    }
+  }
+  query_strings_config {
+    query_string_behavior = "all"
+  }
+}
+
 resource "aws_cloudfront_distribution" "clash_bot_distribution" {
   origin {
-    domain_name = aws_s3_bucket.clash-bot-webapp-s3-bucket.website_endpoint
+    domain_name = aws_s3_bucket.clash-bot-webapp-s3-bucket.bucket_regional_domain_name
     origin_id   = local.s3_origin_id
 
     custom_origin_config {
@@ -116,11 +153,11 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
   }
 
   origin {
-    domain_name = tfe_outputs.clash-bot-webapp.values.webapp_lb_url
+    domain_name = data.tfe_outputs.clash-bot-webapp.values.webapp_lb_url
     origin_id   = "clash-bot-webapp-lb"
 
     custom_origin_config {
-      http_port              = 8080
+      http_port              = var.lb_port
       https_port             = 443
       origin_protocol_policy = "http-only"
       origin_ssl_protocols   = ["TLSv1"]
@@ -144,22 +181,17 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
 
   ordered_cache_behavior {
     allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods           = []
+    cached_methods           = ["GET", "HEAD", "OPTIONS"]
     path_pattern             = "/api*"
     target_origin_id         = "clash-bot-webapp-lb"
     viewer_protocol_policy   = "redirect-to-https"
-    origin_request_policy_id = "UserInformation"
-    forwarded_values {
-      query_string = true
-      cookies {
-        forward = "none"
-      }
-    }
+    cache_policy_id          = aws_cloudfront_cache_policy.clash-bot-service-cf-cp.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.clash-bot-service-rp.id
   }
 
   ordered_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = []
+    cached_methods         = ["GET", "HEAD", "OPTIONS"]
     path_pattern           = "/ws*"
     target_origin_id       = "clash-bot-webapp-lb"
     viewer_protocol_policy = "redirect-to-https"
