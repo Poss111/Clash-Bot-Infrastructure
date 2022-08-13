@@ -38,3 +38,13 @@ variable "custom_header_value" {
   sensitive = true
 }
 
+variable "statically_hosted_s3_bucket" {
+  type      = string
+  sensitive = true
+}
+
+variable "clash_bot_webapp_lb_arn" {
+  type      = string
+  sensitive = true
+}
+
