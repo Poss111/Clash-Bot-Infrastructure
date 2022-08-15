@@ -3,13 +3,18 @@ output "cloudfront_url" {
   description = "Cloudfront url"
 }
 
-output "webapp_s3_bucket" {
-  value       = aws_s3_bucket.clash-bot-webapp-s3-bucket.bucket
-  description = "Clash Bot Webapp S3 bucket"
-}
-
 output "cf_logs_s3_bucket" {
   value       = aws_s3_bucket.clash-bot-cf-logs-bucket.bucket
   description = "Cloudfront logs S3 bucket"
+}
+
+output "host_zone_id" {
+  value       = aws_route53_record.clash-bot-record-a.zone_id
+  description = "Hosted Zone Record"
+}
+
+output "host_zone_name" {
+  value       = aws_route53_record.clash-bot-record-a.name
+  description = "Hosted Zone Record"
 }
 

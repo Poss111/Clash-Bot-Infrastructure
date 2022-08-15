@@ -48,3 +48,7 @@ variable "clash_bot_webapp_lb_arn" {
   sensitive = true
 }
 
+variable "hosted_zone_name" {
+  type = string
+}
+

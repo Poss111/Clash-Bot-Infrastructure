@@ -32,12 +32,24 @@ provider "aws" {
   }
 }
 
-data "aws_lb" "clash-bot-webapp-lb" {
-  arn = var.clash_bot_webapp_lb_arn
+data "aws_route53_zone" "clash-zone" {
+  name = var.hosted_zone_name
 }
 
-data "aws_s3_bucket" "clash-bot-webapp-s3-bucket" {
-  bucket = var.statically_hosted_s3_bucket
+resource "aws_route53_record" "clash-bot-record-a" {
+  zone_id = data.aws_route53_zone.clash-zone.zone_id
+  name    = var.hosted_zone_name
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.clash_bot_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.clash_bot_distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+data "aws_lb" "clash-bot-webapp-lb" {
+  arn = var.clash_bot_webapp_lb_arn
 }
 
 resource "aws_s3_bucket" "clash-bot-cf-logs-bucket" {
@@ -46,7 +58,7 @@ resource "aws_s3_bucket" "clash-bot-cf-logs-bucket" {
 }
 
 locals {
-  s3_origin_id = "S3-www.${data.aws_s3_bucket.clash-bot-webapp-s3-bucket.id}"
+  s3_origin_id = "S3-www.clash-bot-webapp"
 }
 
 data "aws_acm_certificate" "clash-bot-cer" {
@@ -91,8 +103,10 @@ resource "aws_cloudfront_origin_request_policy" "clash-bot-service-rp" {
 }
 
 resource "aws_cloudfront_distribution" "clash_bot_distribution" {
+  aliases             = [var.hosted_zone_name]
+  default_root_object = "index.html"
   origin {
-    domain_name = data.aws_s3_bucket.clash-bot-webapp-s3-bucket.bucket_regional_domain_name
+    domain_name = var.statically_hosted_s3_bucket
     origin_id   = local.s3_origin_id
 
     custom_origin_config {
@@ -158,14 +172,7 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["HEAD", "GET", "OPTIONS"]
     target_origin_id = local.s3_origin_id
-
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
+    cache_policy_id  = aws_cloudfront_cache_policy.clash-bot-service-cf-cp.id
 
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
