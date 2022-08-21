@@ -14,6 +14,11 @@ terraform {
   }
 }
 
+data "tfe_outputs" "clash-bot-webapp" {
+  organization = "ClashBot"
+  workspace    = "ClashBot-Webapp"
+}
+
 provider "aws" {
   access_key = var.access_key
   secret_key = var.secret_key
@@ -27,69 +32,33 @@ provider "aws" {
   }
 }
 
-resource "aws_s3_bucket" "clash-bot-webapp-s3-bucket" {
-  bucket = "clash-bot-webapp-s3-bucket"
+data "aws_route53_zone" "clash-zone" {
+  name = var.hosted_zone_name
 }
 
-resource "aws_s3_bucket_policy" "clash-bot-webapp-s3-bucket-policy" {
-  bucket = aws_s3_bucket.clash-bot-webapp-s3-bucket.id
-  policy = data.aws_iam_policy_document.static_hosting_policy.json
-}
+resource "aws_route53_record" "clash-bot-record-a" {
+  zone_id = data.aws_route53_zone.clash-zone.zone_id
+  name    = var.hosted_zone_name
+  type    = "A"
 
-data "aws_iam_policy_document" "static_hosting_policy" {
-  statement {
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-
-    actions = [
-      "s3:GetObject",
-      "s3:ListBucket",
-    ]
-
-    resources = [
-      aws_s3_bucket.clash-bot-webapp-s3-bucket.arn,
-      "${aws_s3_bucket.clash-bot-webapp-s3-bucket.arn}/*",
-    ]
+  alias {
+    name                   = aws_cloudfront_distribution.clash_bot_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.clash_bot_distribution.hosted_zone_id
+    evaluate_target_health = false
   }
 }
 
-resource "aws_s3_bucket_acl" "clash_bot_webapp_s3_bucket" {
-  bucket = aws_s3_bucket.clash-bot-webapp-s3-bucket.id
-  acl    = "public-read"
-}
-
-resource "aws_s3_bucket_website_configuration" "clash_bot_webapp_s3_website_conf" {
-  bucket = aws_s3_bucket.clash-bot-webapp-s3-bucket.bucket
-
-  index_document {
-    suffix = "index.html"
-  }
-
-  routing_rule {
-    condition {
-      http_error_code_returned_equals = "404"
-    }
-    redirect {
-      host_name        = var.domain
-      protocol         = "https"
-      replace_key_with = "index.html"
-    }
-  }
+data "aws_lb" "clash-bot-webapp-lb" {
+  arn = var.clash_bot_webapp_lb_arn
 }
 
 resource "aws_s3_bucket" "clash-bot-cf-logs-bucket" {
-  bucket = "clash-bot-cf-logs-bucket"
-}
-
-resource "aws_s3_bucket_acl" "clash-bot-webapp-bucket_acl" {
-  bucket = aws_s3_bucket.clash-bot-webapp-s3-bucket.id
-  acl    = "private"
+  bucket        = "clash-bot-cf-logs-bucket"
+  force_destroy = true
 }
 
 locals {
-  s3_origin_id = "S3-www.${aws_s3_bucket.clash-bot-webapp-s3-bucket.id}"
+  s3_origin_id = "S3-www.clash-bot-webapp"
 }
 
 data "aws_acm_certificate" "clash-bot-cer" {
@@ -97,9 +66,47 @@ data "aws_acm_certificate" "clash-bot-cer" {
   statuses = ["ISSUED"]
 }
 
+resource "aws_cloudfront_cache_policy" "clash-bot-service-cf-cp" {
+  name        = "clash-bot-service-cp"
+  comment     = "This is to query for the user information from the service."
+  default_ttl = 1
+  max_ttl     = 1
+  min_ttl     = 1
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = "none"
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+  }
+}
+
+resource "aws_cloudfront_origin_request_policy" "clash-bot-service-rp" {
+  name    = "clash-bot-service-request-policy"
+  comment = "This is to query for the user information from the service."
+  cookies_config {
+    cookie_behavior = "none"
+  }
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = ["Sec-WebSocket-Key", "Sec-WebSocket-Version", "Host", "Sec-WebSocket-Protocol", "Sec-WebSocket-Accept"]
+    }
+  }
+  query_strings_config {
+    query_string_behavior = "all"
+  }
+}
+
 resource "aws_cloudfront_distribution" "clash_bot_distribution" {
+  aliases             = [var.hosted_zone_name]
+  default_root_object = "index.html"
   origin {
-    domain_name = aws_s3_bucket.clash-bot-webapp-s3-bucket.website_endpoint
+    domain_name = var.statically_hosted_s3_bucket
     origin_id   = local.s3_origin_id
 
     custom_origin_config {
@@ -107,6 +114,23 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
       https_port             = 443
       origin_protocol_policy = "http-only"
       origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+    }
+  }
+
+  origin {
+    domain_name = data.aws_lb.clash-bot-webapp-lb.dns_name
+    origin_id   = "clash-bot-webapp-lb"
+
+    custom_origin_config {
+      http_port              = var.lb_port
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1"]
+    }
+
+    custom_header {
+      name  = var.custom_header
+      value = var.custom_header_value
     }
   }
 
@@ -120,18 +144,35 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
     prefix          = "cf-clash-bot"
   }
 
-  default_cache_behavior {
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods   = ["HEAD", "GET", "OPTIONS"]
-    target_origin_id = local.s3_origin_id
+  ordered_cache_behavior {
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = ["GET", "HEAD", "OPTIONS"]
+    path_pattern             = "/api*"
+    target_origin_id         = "clash-bot-webapp-lb"
+    viewer_protocol_policy   = "redirect-to-https"
+    cache_policy_id          = aws_cloudfront_cache_policy.clash-bot-service-cf-cp.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.clash-bot-service-rp.id
+  }
 
+  ordered_cache_behavior {
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD", "OPTIONS"]
+    path_pattern           = "/ws*"
+    target_origin_id       = "clash-bot-webapp-lb"
+    viewer_protocol_policy = "redirect-to-https"
     forwarded_values {
-      query_string = false
-
+      query_string = true
       cookies {
         forward = "none"
       }
     }
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["HEAD", "GET", "OPTIONS"]
+    target_origin_id = local.s3_origin_id
+    cache_policy_id  = aws_cloudfront_cache_policy.clash-bot-service-cf-cp.id
 
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0

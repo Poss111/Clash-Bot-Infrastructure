@@ -22,3 +22,33 @@ variable "domain" {
   type        = string
   sensitive   = true
 }
+
+variable "lb_port" {
+  description = "Load Balancer Port"
+  type        = number
+}
+
+variable "custom_header" {
+  type      = string
+  sensitive = true
+}
+
+variable "custom_header_value" {
+  type      = string
+  sensitive = true
+}
+
+variable "statically_hosted_s3_bucket" {
+  type      = string
+  sensitive = true
+}
+
+variable "clash_bot_webapp_lb_arn" {
+  type      = string
+  sensitive = true
+}
+
+variable "hosted_zone_name" {
+  type = string
+}
+
