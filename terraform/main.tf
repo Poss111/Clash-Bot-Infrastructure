@@ -168,6 +168,22 @@ resource "aws_cloudfront_distribution" "clash_bot_distribution" {
     }
   }
 
+  ordered_cache_behavior {
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = ["GET", "HEAD", "OPTIONS"]
+    path_pattern             = "/auth*"
+    target_origin_id         = "clash-bot-webapp-lb"
+    viewer_protocol_policy   = "redirect-to-https"
+    cache_policy_id          = aws_cloudfront_cache_policy.clash-bot-service-cf-cp.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.clash-bot-service-rp.id
+    forwarded_values {
+      query_string = true
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["HEAD", "GET", "OPTIONS"]
