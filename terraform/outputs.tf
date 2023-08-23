@@ -1,20 +1,19 @@
-output "cloudfront_url" {
-  value       = aws_cloudfront_distribution.clash_bot_distribution.domain_name
-  description = "Cloudfront url"
+output "cluster_endpoint" {
+  description = "Endpoint for EKS control plane"
+  value       = module.eks.cluster_endpoint
 }
 
-output "cf_logs_s3_bucket" {
-  value       = aws_s3_bucket.clash-bot-cf-logs-bucket.bucket
-  description = "Cloudfront logs S3 bucket"
+output "cluster_security_group_id" {
+  description = "Security group ids attached to the cluster control plane"
+  value       = module.eks.cluster_security_group_id
 }
 
-output "host_zone_id" {
-  value       = aws_route53_record.clash-bot-record-a.zone_id
-  description = "Hosted Zone Record"
+output "region" {
+  description = "AWS region"
+  value       = var.region
 }
 
-output "host_zone_name" {
-  value       = aws_route53_record.clash-bot-record-a.name
-  description = "Hosted Zone Record"
+output "cluster_name" {
+  description = "Kubernetes Cluster Name"
+  value       = module.eks.cluster_name
 }
-
