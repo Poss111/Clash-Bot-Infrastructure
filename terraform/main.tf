@@ -1,7 +1,9 @@
 provider "aws" {
   region = var.region
   default_tags {
-    application = local.prefix
+    tags = {
+      application = local.prefix
+    }
   }
 }
 
