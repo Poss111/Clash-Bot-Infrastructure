@@ -7,6 +7,12 @@ provider "aws" {
   }
 }
 
+provider "kubernetes" {
+  host                   = module.eks.endpoint
+  cluster_ca_certificate = base64decode(module.eks.certificate_authority[0].data)
+  token                  = module.eks.token
+}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_availability_zones" "available" {
