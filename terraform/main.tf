@@ -97,7 +97,7 @@ module "eks_auth" {
 
   map_roles = [
     {
-      rolearn  = "arn:aws:iam::${aws_caller_identity}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
       username = "AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
       groups   = ["system:masters"]
     },
