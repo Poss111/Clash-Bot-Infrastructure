@@ -84,23 +84,14 @@ module "eks" {
       desired_size = 1
     }
   }
-}
 
-locals {
-  name = "ex-${replace(basename(path.cwd), "_", "-")}"
-}
+  manage_aws_auth_configmap = true
 
-module "eks_auth" {
-  source  = "aidanmelen/eks-auth/aws"
-  version = "1.0.0"
-  eks    = module.eks
-
-  map_roles = [
+  aws_auth_roles = [
     {
       rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
       username = "AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
       groups   = ["system:masters"]
     },
   ]
-  
 }
