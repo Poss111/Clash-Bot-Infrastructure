@@ -7,6 +7,8 @@ provider "aws" {
   }
 }
 
+data "aws_caller_identity" "current" {}
+
 data "aws_availability_zones" "available" {
   filter {
     name   = "opt-in-status"
@@ -82,4 +84,23 @@ module "eks" {
       desired_size = 1
     }
   }
+}
+
+locals {
+  name = "ex-${replace(basename(path.cwd), "_", "-")}"
+}
+
+module "eks_auth" {
+  source  = "aidanmelen/eks-auth/aws"
+  version = "1.0.0"
+  eks    = module.eks
+
+  map_roles = [
+    {
+      rolearn  = "arn:aws:iam::${aws_caller_identity}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      username = "AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      groups   = ["system:masters"]
+    },
+  ]
+  
 }
