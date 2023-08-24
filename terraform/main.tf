@@ -8,9 +8,14 @@ provider "aws" {
 }
 
 provider "kubernetes" {
-  host                   = module.eks.endpoint
+  host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  token                  = module.eks.token
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1alpha1"
+    command     = "aws"
+    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_id]
+  }
 }
 
 data "aws_caller_identity" "current" {}
