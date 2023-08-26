@@ -84,24 +84,14 @@ module "eks" {
       max_size     = 3
       desired_size = 2
     }
-
-    two = {
-      name = "node-group-2"
-
-      instance_types = ["t3.small"]
-
-      min_size     = 1
-      max_size     = 2
-      desired_size = 1
-    }
   }
 
   manage_aws_auth_configmap = true
 
   aws_auth_roles = [
     {
-      rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
-      username = "AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      username = "sso-local-login::{{SessionName}}"
       groups   = ["system:masters"]
     },
   ]
