@@ -9,7 +9,7 @@ provider "aws" {
 
 data "aws_eks_cluster_auth" "default" {
   name       = module.eks.cluster_id
-  depends_on = module.eks
+  depends_on = [ module.eks ]
 }
 
 provider "kubernetes" {
@@ -96,7 +96,6 @@ module "eks" {
     }
   }
 
-  create_aws_auth_configmap = true
   manage_aws_auth_configmap = true
 
   aws_auth_roles = [
