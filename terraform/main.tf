@@ -7,6 +7,17 @@ provider "aws" {
   }
 }
 
+data "aws_eks_cluster_auth" "default" {
+  name       = module.eks.cluster_id
+  depends_on = module.eks
+}
+
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  token                  = data.aws_eks_cluster_auth.default.token
+}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_availability_zones" "available" {
@@ -85,14 +96,14 @@ module "eks" {
     }
   }
 
-  # create_aws_auth_configmap = true
-  # manage_aws_auth_configmap = true
+  create_aws_auth_configmap = true
+  manage_aws_auth_configmap = true
 
-  # aws_auth_roles = [
-  #   {
-  #     rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
-  #     username = "AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
-  #     groups   = ["system:masters"]
-  #   },
-  # ]
+  aws_auth_roles = [
+    {
+      rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      username = "AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      groups   = ["system:masters"]
+    },
+  ]
 }
