@@ -85,7 +85,7 @@ module "eks" {
   access_entries = {
     admin_role = {
       principal_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
-      type = "ROLE"
+      type = "STANDARD"
       groups = ["system:masters"]
     }
   }
