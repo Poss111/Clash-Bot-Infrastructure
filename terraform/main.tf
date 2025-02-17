@@ -80,13 +80,22 @@ module "eks" {
     node_pools = ["general-purpose"]
   }
 
-  manage_aws_auth_configmap = true
+  authentication_mode = "API_AND_CONFIG_MAP"
 
-  aws_auth_roles = [
-    {
-      rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
-      username = "sso-local-login::{{SessionName}}"
-      groups   = ["system:masters"]
-    },
-  ]
+  access_entries = {
+    # One access entry with a policy associated
+    main = {
+      principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+
+      policy_associations = {
+        example = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+          access_scope = {
+            namespaces = ["default"]
+            type       = "namespace"
+          }
+        }
+      }
+    }
+  }
 }
