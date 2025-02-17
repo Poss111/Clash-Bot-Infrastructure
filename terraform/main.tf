@@ -64,7 +64,7 @@ module "vpc" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "19.15.3"
+  version = "20.33.1"
 
   cluster_name    = local.cluster_name
   cluster_version = "1.32"
@@ -73,20 +73,11 @@ module "eks" {
   subnet_ids                     = module.vpc.private_subnets
   cluster_endpoint_public_access = true
 
-  eks_managed_node_group_defaults = {
-    ami_type = "AL2_ARM_64"
-  }
+  enable_cluster_creator_admin_permissions = true
 
-  eks_managed_node_groups = {
-    one = {
-      name = "node-group-1"
-
-      instance_types = ["t4g.micro"]
-
-      min_size     = 1
-      max_size     = 2
-      desired_size = 1
-    }
+  cluster_compute_config = {
+    enabled    = true
+    node_pools = ["general-purpose"]
   }
 
   manage_aws_auth_configmap = true
