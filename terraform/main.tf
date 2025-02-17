@@ -5,7 +5,7 @@ provider "aws" {
       application = local.prefix
       Environment = "Prod"
       Service     = "ClashBot"
-
+      Type        = "Base"
     }
   }
 }
