@@ -20,7 +20,7 @@ output "cluster_name" {
 
 output "auth_map" {
   description = "The Kubernetes Cluster auth map"
-  value       = module.eks.aws_auth_configmap_yaml
+  value       = module.eks.access_entries
 }
 
 output "iam_role" {
