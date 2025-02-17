@@ -5,3 +5,4 @@
 ## Summary
 
 A simple infra repo for creating the necessary infrastructure for Clash Bot.
+
