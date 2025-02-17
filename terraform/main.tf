@@ -64,7 +64,7 @@ module "vpc" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.33.1"
+  version = "19.15.3"
 
   cluster_name    = local.cluster_name
   cluster_version = "1.32"
@@ -73,29 +73,19 @@ module "eks" {
   subnet_ids                     = module.vpc.private_subnets
   cluster_endpoint_public_access = true
 
-  enable_cluster_creator_admin_permissions = true
-
-  cluster_compute_config = {
-    enabled    = true
-    node_pools = ["general-purpose"]
+  eks_managed_node_group_defaults = {
+    ami_type = "AL2_ARM_64"
   }
 
-  authentication_mode = "API_AND_CONFIG_MAP"
+  eks_managed_node_groups = {
+    one = {
+      name = "node-group-1"
 
-  access_entries = {
-    # One access entry with a policy associated
-    main = {
-      principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      instance_types = ["t4g.micro"]
 
-      policy_associations = {
-        example = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
-          access_scope = {
-            namespaces = ["default"]
-            type       = "namespace"
-          }
-        }
-      }
+      min_size     = 1
+      max_size     = 2
+      desired_size = 1
     }
   }
 }
