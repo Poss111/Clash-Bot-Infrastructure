@@ -3,6 +3,9 @@ provider "aws" {
   default_tags {
     tags = {
       application = local.prefix
+      Environment = "Prod"
+      Service     = "ClashBot"
+
     }
   }
 }
@@ -64,7 +67,7 @@ module "eks" {
   version = "19.15.3"
 
   cluster_name    = local.cluster_name
-  cluster_version = "1.27"
+  cluster_version = "1.32"
 
   vpc_id                         = module.vpc.vpc_id
   subnet_ids                     = module.vpc.private_subnets
@@ -78,7 +81,7 @@ module "eks" {
     one = {
       name = "node-group-1"
 
-      instance_types = ["t3.micro"]
+      instance_types = ["t4g.micro"]
 
       min_size     = 1
       max_size     = 2
