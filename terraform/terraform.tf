@@ -1,10 +1,11 @@
 terraform {
 
-  cloud {
-    workspaces {
-      name = "learn-terraform-eks"
-    }
-  }
+  # cloud {
+  #   organization = "ClashBot"
+  #   workspaces {
+  #     name = "Clash-Bot-Infrastructure"
+  #   }
+  # }
 
   required_providers {
     aws = {
