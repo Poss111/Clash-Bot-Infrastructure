@@ -117,21 +117,20 @@ module "eks" {
   vpc_id                         = module.vpc.vpc_id
   subnet_ids                     = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.public_subnets
+  
+  cluster_endpoint_public_access = true
+  enable_cluster_creator_admin_permissions = true
 
-  bootstrap_self_managed_addons = true
+  bootstrap_self_managed_addons = false
   cluster_addons = {
     coredns                = {}
     eks-pod-identity-agent = {}
     kube-proxy             = {}
     vpc-cni                = {}
   }
-
-  cluster_endpoint_public_access = true
-
-  enable_cluster_creator_admin_permissions = true
   
   eks_managed_node_group_defaults = {
-    instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
+    instance_types = ["t4g.micro"]
   }
 
   eks_managed_node_groups  = {
@@ -151,11 +150,21 @@ module "eks" {
       principal_arn  = aws_iam_role.eks_admin.arn
       type = "STANDARD"
       groups = ["system:masters"]
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+        }
+      }
     }
     admin_role_2 = {
       principal_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
       type = "STANDARD"
       groups = ["system:masters"]
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+        }
+      }
     }
   }
 }
