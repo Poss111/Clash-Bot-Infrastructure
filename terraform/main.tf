@@ -116,22 +116,31 @@ module "eks" {
 
   vpc_id                         = module.vpc.vpc_id
   subnet_ids                     = module.vpc.private_subnets
+  control_plane_subnet_ids = module.vpc.public_subnets
+
+  bootstrap_self_managed_addons = true
+  cluster_addons = {
+    coredns                = {}
+    eks-pod-identity-agent = {}
+    kube-proxy             = {}
+    vpc-cni                = {}
+  }
+
   cluster_endpoint_public_access = true
 
   enable_cluster_creator_admin_permissions = true
+  
+  eks_managed_node_group_defaults = {
+    instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
+  }
 
-  self_managed_node_groups = {
+  eks_managed_node_groups  = {
     t4g-micro = {
+      ami_type = "AL2_ARM_64"
+      instance_types = ["t4g.micro"]
       desired_size = 1
       min_size     = 1
       max_size     = 2
-
-      instance_types = ["t4g.micro"]
-      capacity_type  = "ON_DEMAND"
-
-      labels = {
-        role = "general-purpose"
-      }
     }
   }
 
