@@ -174,5 +174,10 @@ module "eks" {
         }
       }
     }
+    admin_role_2 = {
+      principal_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      type = "STANDARD"
+      groups = ["system:masters"]
+    }
   }
 }
