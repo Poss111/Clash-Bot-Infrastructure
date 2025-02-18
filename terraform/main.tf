@@ -62,6 +62,51 @@ module "vpc" {
   }
 }
 
+resource "aws_iam_role" "eks_admin" {
+  name = "eks-admin"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "eks_admin_policy" {
+  name = "eks-admin-policy"
+  description = "Policy for EKS admin role"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "eks:*",
+          "ec2:*",
+          "iam:PassRole",
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "eks_admin_attachment" {
+  role       = aws_iam_role.eks_admin.name
+  policy_arn = aws_iam_policy.eks_admin_policy.arn
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "20.33.1"
@@ -84,7 +129,7 @@ module "eks" {
 
   access_entries = {
     admin_role = {
-      principal_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      principal_arn  = aws_iam_role.eks_admin.arn
       type = "STANDARD"
       groups = ["system:masters"]
     }
