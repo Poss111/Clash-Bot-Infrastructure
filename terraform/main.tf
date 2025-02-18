@@ -122,7 +122,22 @@ module "eks" {
 
   cluster_compute_config = {
     enabled    = true
-    node_pools = ["general-purpose"]
+    node_pools = ["t4g-micro"]
+  }
+
+  self_managed_node_groups = {
+    t4g-micro = {
+      desired_size = 1
+      min_size     = 1
+      max_size     = 2
+
+      instance_types = ["t4g.micro"]
+      capacity_type  = "ON_DEMAND"
+
+      labels = {
+        role = "general-purpose"
+      }
+    }
   }
 
   authentication_mode = "API_AND_CONFIG_MAP"
