@@ -120,11 +120,6 @@ module "eks" {
 
   enable_cluster_creator_admin_permissions = true
 
-  cluster_compute_config = {
-    enabled    = true
-    node_pools = ["t4g-micro"]
-  }
-
   self_managed_node_groups = {
     t4g-micro = {
       desired_size = 1
