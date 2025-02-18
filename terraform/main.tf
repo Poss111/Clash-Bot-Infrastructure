@@ -80,7 +80,7 @@ resource "aws_iam_role" "eks_admin" {
 }
 
 resource "aws_iam_policy" "eks_admin_policy" {
-  name = "eks-admin-policy"
+  name        = "eks-admin-policy"
   description = "Policy for EKS admin role"
 
   policy = jsonencode({
@@ -114,11 +114,11 @@ module "eks" {
   cluster_name    = local.cluster_name
   cluster_version = "1.32"
 
-  vpc_id                         = module.vpc.vpc_id
-  subnet_ids                     = module.vpc.private_subnets
+  vpc_id                   = module.vpc.vpc_id
+  subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.public_subnets
-  
-  cluster_endpoint_public_access = true
+
+  cluster_endpoint_public_access           = true
   enable_cluster_creator_admin_permissions = true
 
   bootstrap_self_managed_addons = false
@@ -128,24 +128,24 @@ module "eks" {
     kube-proxy             = {}
     vpc-cni                = {}
   }
-  
+
   eks_managed_node_group_defaults = {
     instance_types = ["t4g.micro"]
   }
 
-  eks_managed_node_groups  = {
+  eks_managed_node_groups = {
     t4g-micro = {
-      ami_type = "AL2_ARM_64"
+      ami_type       = "AL2_ARM_64"
       instance_types = ["t4g.micro"]
-      desired_size = 1
-      min_size     = 1
-      max_size     = 2
+      desired_size   = 1
+      min_size       = 1
+      max_size       = 2
 
       aws_iam_role_policy_attachments = {
-        AmazonEKSWorkerNodePolicy = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-        AmazonEKS_CNI_Policy       = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+        AmazonEKSWorkerNodePolicy          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        AmazonEKS_CNI_Policy               = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
         AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-        AmazonSSMManagedInstanceCore  = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore "
+        AmazonSSMManagedInstanceCore       = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore "
       }
     }
   }
@@ -154,9 +154,9 @@ module "eks" {
 
   access_entries = {
     root_role = {
-      principal_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      type = "STANDARD"
-      groups = ["system:masters"]
+      principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      type          = "STANDARD"
+      groups        = ["system:masters"]
       policy_associations = {
         admin = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
@@ -168,9 +168,9 @@ module "eks" {
       }
     }
     admin_role = {
-      principal_arn  = aws_iam_role.eks_admin.arn
-      type = "STANDARD"
-      groups = ["system:masters"]
+      principal_arn = aws_iam_role.eks_admin.arn
+      type          = "STANDARD"
+      groups        = ["system:masters"]
       policy_associations = {
         admin = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
@@ -182,23 +182,9 @@ module "eks" {
       }
     }
     admin_role_2 = {
-      principal_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
-      type = "STANDARD"
-      groups = ["system:masters"]
-      policy_associations = {
-        admin = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
-          access_scope = {
-            namespaces = ["default"]
-            type       = "namespace"
-          }
-        }
-      }
-    }
-    worker_node = {
-      principal_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
-      type = "EC2 Linux"
-      groups = ["system:masters"]
+      principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      type          = "STANDARD"
+      groups        = ["system:masters"]
       policy_associations = {
         admin = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
