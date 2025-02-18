@@ -140,12 +140,33 @@ module "eks" {
       desired_size = 1
       min_size     = 1
       max_size     = 2
+
+      aws_iam_role_policy_attachments = {
+        AmazonEKSWorkerNodePolicy = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        AmazonEKS_CNI_Policy       = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+        AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        AmazonSSMManagedInstanceCore  = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore "
+      }
     }
   }
 
   authentication_mode = "API_AND_CONFIG_MAP"
 
   access_entries = {
+    root_role = {
+      principal_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      type = "STANDARD"
+      groups = ["system:masters"]
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+          access_scope = {
+            namespaces = ["default"]
+            type       = "namespace"
+          }
+        }
+      }
+    }
     admin_role = {
       principal_arn  = aws_iam_role.eks_admin.arn
       type = "STANDARD"
@@ -163,6 +184,20 @@ module "eks" {
     admin_role_2 = {
       principal_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
       type = "STANDARD"
+      groups = ["system:masters"]
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+          access_scope = {
+            namespaces = ["default"]
+            type       = "namespace"
+          }
+        }
+      }
+    }
+    worker_node = {
+      principal_arn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_PowerUserAccess_836cd7042fa448cb"
+      type = "EC2 Linux"
       groups = ["system:masters"]
       policy_associations = {
         admin = {
