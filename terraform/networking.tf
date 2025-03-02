@@ -27,12 +27,20 @@ resource "aws_subnet" "private_1" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = local.subnets[2]
   availability_zone = "us-east-1a"
+  tags = {
+    availability_zone = "us-east-1a"
+    subnet_type       = "private"
+  }
 }
 
 resource "aws_subnet" "private_2" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = local.subnets[3]
   availability_zone = "us-east-1b"
+  tags = {
+    availability_zone = "us-east-1b"
+    subnet_type       = "private"
+  }
 }
 
 resource "aws_internet_gateway" "main" {
