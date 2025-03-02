@@ -1,6 +1,6 @@
 resource "aws_api_gateway_rest_api" "api" {
-  name        = "ClashBot"
-  description = "API Gateway for my application"
+  name        = "ClashBot_Services_API"
+  description = "High-performance API Gateway for ClashBot Services, enabling seamless integration and robust communication."
   binary_media_types = [
     "application/json",
     "application/octet-stream"
