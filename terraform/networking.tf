@@ -105,9 +105,10 @@ resource "aws_route_table_association" "private_2" {
 }
 
 resource "aws_vpc_endpoint" "cloudwatch" {
-  vpc_id       = aws_vpc.main.id
-  service_name = "com.amazonaws.us-east-1.logs"
-  subnet_ids   = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.us-east-1.logs"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = [aws_subnet.private_1.id, aws_subnet.private_2.id]
 }
 
 resource "aws_vpc_endpoint" "ecr" {
@@ -135,5 +136,4 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_id            = aws_vpc.main.id
   service_name      = "com.amazonaws.us-east-1.s3"
   vpc_endpoint_type = "Gateway"
-  route_table_ids   = [aws_subnet.private_1.id, aws_subnet.private_2.id]
 }
