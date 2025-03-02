@@ -118,7 +118,7 @@ resource "aws_vpc_endpoint" "ecr" {
   subnet_ids        = [aws_subnet.private_1.id, aws_subnet.private_2.id]
 }
 
-resource "aws_vpc_endpoint" "ecr" {
+resource "aws_vpc_endpoint" "ecr-dkr" {
   vpc_id            = aws_vpc.main.id
   service_name      = "com.amazonaws.us-east-1.ecr.dkr"
   vpc_endpoint_type = "Interface"
