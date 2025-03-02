@@ -111,19 +111,22 @@ resource "aws_vpc_endpoint" "cloudwatch" {
 }
 
 resource "aws_vpc_endpoint" "ecr" {
-  vpc_id       = aws_vpc.main.id
-  service_name = "com.amazonaws.us-east-1.ecr.api"
-  subnet_ids   = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.us-east-1.ecr.api"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = [aws_subnet.private_1.id, aws_subnet.private_2.id]
 }
 
 resource "aws_vpc_endpoint" "ecs" {
-  vpc_id       = aws_vpc.main.id
-  service_name = "com.amazonaws.us-east-1.ecs"
-  subnet_ids   = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.us-east-1.ecs"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = [aws_subnet.private_1.id, aws_subnet.private_2.id]
 }
 
 resource "aws_vpc_endpoint" "secretsmanager" {
-  vpc_id       = aws_vpc.main.id
-  service_name = "com.amazonaws.us-east-1.secretsmanager"
-  subnet_ids   = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.us-east-1.secretsmanager"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = [aws_subnet.private_1.id, aws_subnet.private_2.id]
 }
