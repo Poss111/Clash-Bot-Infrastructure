@@ -63,11 +63,21 @@ resource "aws_apigatewayv2_api" "api" {
   }
 }
 
+resource "aws_apigatewayv2_stage" "default_stage" {
+  api_id      = aws_apigatewayv2_api.api.id
+  name        = "$default"
+  auto_deploy = true
+  default_route_settings {
+    throttling_burst_limit = 50
+    throttling_rate_limit  = 100
+  }
+}
+
 # Step 7: Map the custom domain to API Gateway
 resource "aws_apigatewayv2_api_mapping" "api_mapping" {
   api_id      = aws_apigatewayv2_api.api.id
   domain_name = aws_apigatewayv2_domain_name.custom_domain.id
-  stage       = "$default" # Use the actual deployment stage name
+  stage       = "$default"
 }
 
 # Step 8: Create a Route 53 Alias Record for API Gateway
