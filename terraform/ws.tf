@@ -129,7 +129,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
 }
 
 # Step 7: Map the custom domain to API Gateway
-resource "aws_apigatewayv2_api_mapping" "api_mapping" {
+resource "aws_apigatewayv2_api_mapping" "ws_api_mapping" {
   api_id      = aws_apigatewayv2_api.ws_api.id
   domain_name = aws_apigatewayv2_domain_name.ws_custom_domain.id
   stage       = "$default"
