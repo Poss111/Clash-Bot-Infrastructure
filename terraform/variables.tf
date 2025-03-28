@@ -15,3 +15,8 @@ variable "public_route_cidr" {
   type        = string
   default     = "0.0.0.0/0"
 }
+
+variable "lambda_name" {
+  description = "The name of the Lambda function"
+  type        = string
+}
