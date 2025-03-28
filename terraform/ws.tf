@@ -61,7 +61,7 @@ resource "aws_apigatewayv2_api" "ws_api" {
 # Create a default route ($default)
 resource "aws_apigatewayv2_route" "ws_default_route" {
   api_id    = aws_apigatewayv2_api.ws_api.id
-  route_key = "$default"
+  route_key = "subscribe"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
 }
 
