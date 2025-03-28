@@ -65,13 +65,6 @@ resource "aws_apigatewayv2_route" "ws_default_route" {
   target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
 }
 
-# Step 7: Map the custom domain to API Gateway
-resource "aws_apigatewayv2_api_mapping" "ws_api_mapping" {
-  api_id      = aws_apigatewayv2_api.ws_api.id
-  domain_name = aws_apigatewayv2_domain_name.ws_custom_domain.id
-  stage       = "$default"
-}
-
 # Step 8: Create a Route 53 Alias Record for API Gateway
 resource "aws_route53_record" "ws_dns" {
   zone_id = data.aws_route53_zone.existing_zone.zone_id
