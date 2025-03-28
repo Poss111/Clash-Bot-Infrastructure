@@ -134,3 +134,4 @@ resource "aws_apigatewayv2_api_mapping" "api_mapping" {
   domain_name = aws_apigatewayv2_domain_name.ws_custom_domain.id
   stage       = "$default"
 }
+
