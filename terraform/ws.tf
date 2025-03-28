@@ -108,7 +108,7 @@ resource "aws_apigatewayv2_deployment" "websocket_deployment" {
 # Create a stage for the WebSocket API
 resource "aws_apigatewayv2_stage" "websocket_stage" {
   api_id        = aws_apigatewayv2_api.ws_api.id
-  name          = "dev"
+  name          = "$default"
   deployment_id = aws_apigatewayv2_deployment.websocket_deployment.id
 }
 
