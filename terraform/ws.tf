@@ -117,6 +117,23 @@ resource "aws_apigatewayv2_stage" "websocket_stage" {
   api_id        = aws_apigatewayv2_api.ws_api.id
   name          = "$default"
   deployment_id = aws_apigatewayv2_deployment.websocket_deployment.id
+
+  default_route_settings {
+    throttling_burst_limit = 50
+    throttling_rate_limit = 100
+  }
+
+  route_settings {
+    route_key = "$connect"
+    throttling_burst_limit = 50
+    throttling_rate_limit = 100
+  }
+
+  route_settings {
+    route_key = "$disconnect"
+    throttling_burst_limit = 50
+    throttling_rate_limit = 100
+  }
 }
 
 # Permissions: Allow API Gateway to invoke the Lambda
