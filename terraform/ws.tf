@@ -103,6 +103,11 @@ resource "aws_apigatewayv2_stage" "websocket_stage" {
   api_id        = aws_apigatewayv2_api.ws_api.id
   name          = "$default"
   deployment_id = aws_apigatewayv2_deployment.websocket_deployment.id
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gw_logs.arn
+    format          = "$context.requestId $context.routeKey $context.status $context.error.message"
+  }
 }
 
 # Permissions: Allow API Gateway to invoke the Lambda
@@ -118,15 +123,4 @@ resource "aws_lambda_permission" "apigw_lambda" {
 resource "aws_cloudwatch_log_group" "api_gw_logs" {
   name              = "/aws/apigateway/${aws_apigatewayv2_api.ws_api.id}"
   retention_in_days = 7
-}
-
-resource "aws_apigatewayv2_stage" "websocket_stage" {
-  api_id      = aws_apigatewayv2_api.ws_api.id
-  name        = "dev"
-  deployment_id = aws_apigatewayv2_deployment.websocket_deployment.id
-
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.api_gw_logs.arn
-    format          = "$context.requestId $context.routeKey $context.status $context.error.message"
-  }
 }
