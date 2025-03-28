@@ -103,11 +103,6 @@ resource "aws_apigatewayv2_stage" "websocket_stage" {
   api_id        = aws_apigatewayv2_api.ws_api.id
   name          = "$default"
   deployment_id = aws_apigatewayv2_deployment.websocket_deployment.id
-
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.api_gw_logs.arn
-    format          = "$context.requestId $context.routeKey $context.status $context.error.message"
-  }
 }
 
 # Permissions: Allow API Gateway to invoke the Lambda
@@ -119,8 +114,9 @@ resource "aws_lambda_permission" "apigw_lambda" {
   source_arn    = "${aws_apigatewayv2_api.ws_api.execution_arn}/*/*"
 }
 
-
-resource "aws_cloudwatch_log_group" "api_gw_logs" {
-  name              = "/aws/apigateway/${aws_apigatewayv2_api.ws_api.id}"
-  retention_in_days = 7
+# Step 7: Map the custom domain to API Gateway
+resource "aws_apigatewayv2_api_mapping" "api_mapping" {
+  api_id      = aws_apigatewayv2_api.ws_api.id
+  domain_name = aws_apigatewayv2_domain_name.ws_custom_domain.id
+  stage       = "$default"
 }
