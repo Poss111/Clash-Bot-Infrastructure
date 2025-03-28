@@ -49,3 +49,39 @@ resource "aws_route53_record" "ws_dns" {
     evaluate_target_health = false
   }
 }
+
+data "aws_lambda_function" "websocket_handler" {
+  function_name = var.lambda_name
+}
+
+# Create the integration between API Gateway and Lambda
+resource "aws_apigatewayv2_integration" "lambda_integration" {
+  api_id           = aws_apigatewayv2_api.ws_api.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = data.aws_lambda_function.websocket_handler.invoke_arn
+}
+
+# Deploy the API
+resource "aws_apigatewayv2_deployment" "websocket_deployment" {
+  api_id = aws_apigatewayv2_api.ws_api.id
+
+  depends_on = [
+    aws_apigatewayv2_route.ws_default_route
+  ]
+}
+
+# Create a stage for the WebSocket API
+resource "aws_apigatewayv2_stage" "websocket_stage" {
+  api_id      = aws_apigatewayv2_api.ws_api.id
+  name        = "dev"
+  deployment_id = aws_apigatewayv2_deployment.websocket_deployment.id
+}
+
+# Permissions: Allow API Gateway to invoke the Lambda
+resource "aws_lambda_permission" "apigw_lambda" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = data.aws_lambda_function.websocket_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.ws_api.execution_arn}/*/*"
+}
