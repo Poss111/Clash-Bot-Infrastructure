@@ -1,19 +1,54 @@
+# Step 2: Create an ACM Certificate for API Gateway
+resource "aws_acm_certificate" "ws_cert" {
+  domain_name       = "ws.clash-bot.ninja"
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Step 3: Create DNS validation record for ACM certificate
+resource "aws_route53_record" "ws_cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.ws_cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  zone_id = data.aws_route53_zone.existing_zone.zone_id
+  name    = each.value.name
+  type    = each.value.type
+  records = [each.value.record]
+  ttl     = 60
+}
+
+
+
+# Step 4: Validate the certificate
+resource "aws_acm_certificate_validation" "ws_cert" {
+  certificate_arn         = aws_acm_certificate.ws_cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.ws_cert_validation : record.fqdn]
+}
+
 
 # Step 5: Create the API Gateway V2 custom domain
 resource "aws_apigatewayv2_domain_name" "ws_custom_domain" {
   domain_name = "ws.clash-bot.ninja"
 
   domain_name_configuration {
-    certificate_arn = aws_acm_certificate_validation.cert.certificate_arn
+    certificate_arn = aws_acm_certificate_validation.ws_cert.certificate_arn
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
 }
 
 resource "aws_apigatewayv2_api" "ws_api" {
-  name                         = "ClashBot_Services_WS"
-  protocol_type                = "WEBSOCKET"
-  description                  = "WebSocket API Gateway for ClashBot Services, enabling real-time communication and seamless integration."
+  name                       = "ClashBot_Services_WS"
+  protocol_type              = "WEBSOCKET"
+  description                = "WebSocket API Gateway for ClashBot Services, enabling real-time communication and seamless integration."
   route_selection_expression = "$request.body.action"
 
   tags = {
@@ -72,8 +107,8 @@ resource "aws_apigatewayv2_deployment" "websocket_deployment" {
 
 # Create a stage for the WebSocket API
 resource "aws_apigatewayv2_stage" "websocket_stage" {
-  api_id      = aws_apigatewayv2_api.ws_api.id
-  name        = "dev"
+  api_id        = aws_apigatewayv2_api.ws_api.id
+  name          = "dev"
   deployment_id = aws_apigatewayv2_deployment.websocket_deployment.id
 }
 
