@@ -65,6 +65,20 @@ resource "aws_apigatewayv2_route" "ws_default_route" {
   target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
 }
 
+# Create a connect route ($connect)
+resource "aws_apigatewayv2_route" "ws_connect_route" {
+  api_id    = aws_apigatewayv2_api.ws_api.id
+  route_key = "$connect"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+}
+
+# Create a disconnect route ($disconnect)
+resource "aws_apigatewayv2_route" "ws_disconnect_route" {
+  api_id    = aws_apigatewayv2_api.ws_api.id
+  route_key = "$disconnect"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+}
+
 # Step 8: Create a Route 53 Alias Record for API Gateway
 resource "aws_route53_record" "ws_dns" {
   zone_id = data.aws_route53_zone.existing_zone.zone_id
