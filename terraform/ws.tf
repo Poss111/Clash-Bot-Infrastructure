@@ -13,7 +13,7 @@ resource "aws_apigatewayv2_domain_name" "ws_custom_domain" {
 resource "aws_apigatewayv2_api" "ws_api" {
   name                         = "ClashBot_Services_WS"
   protocol_type                = "WEBSOCKET"
-  description                  = "High-performance API Gateway for ClashBot Services, enabling seamless integration and robust communication."
+  description                  = "WebSocket API Gateway for ClashBot Services, enabling real-time communication and seamless integration."
   route_selection_expression = "$request.body.action"
 
   tags = {
@@ -25,15 +25,15 @@ resource "aws_apigatewayv2_api" "ws_api" {
 
 # Create a default route ($default)
 resource "aws_apigatewayv2_route" "ws_default_route" {
-  api_id    = aws_apigatewayv2_api.websocket_api.id
+  api_id    = aws_apigatewayv2_api.ws_api.id
   route_key = "$default"
   target    = "integrations/TO_BE_DEFINED_IN_PULUMI"
 }
 
 # Step 7: Map the custom domain to API Gateway
 resource "aws_apigatewayv2_api_mapping" "ws_api_mapping" {
-  api_id      = aws_apigatewayv2_api.api.id
-  domain_name = aws_apigatewayv2_domain_name.custom_domain.id
+  api_id      = aws_apigatewayv2_api.ws_api.id
+  domain_name = aws_apigatewayv2_domain_name.ws_custom_domain.id
   stage       = "$default"
 }
 
@@ -44,8 +44,8 @@ resource "aws_route53_record" "ws_dns" {
   type    = "A"
 
   alias {
-    name                   = aws_apigatewayv2_domain_name.custom_domain.domain_name_configuration[0].target_domain_name
-    zone_id                = aws_apigatewayv2_domain_name.custom_domain.domain_name_configuration[0].hosted_zone_id
+    name                   = aws_apigatewayv2_domain_name.ws_custom_domain.domain_name_configuration[0].target_domain_name
+    zone_id                = aws_apigatewayv2_domain_name.ws_custom_domain.domain_name_configuration[0].hosted_zone_id
     evaluate_target_health = false
   }
 }
